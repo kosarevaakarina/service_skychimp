@@ -1,0 +1,19 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+    {% for mailing in mailing_list %}
+        <div class="my-3 p-3 bg-white rounded box-shadow">
+            <a href="{% url 'mailing:mailing_detail' mailing.pk %}" class="border-bottom border-gray pb-2 mb-0">{{ mailing }}</a>
+            <div class="media text-muted pt-3">
+                <p class="media-body pb-3 mb-0 small lh-125 border-bottom border-gray">
+                    <strong class="d-block text-gray-dark">Периодичность: {{ mailing.frequency }}</strong>
+                    <strong class="d-block text-gray-dark">Статус: {{ mailing.status }}</strong>
+                </p>
+            </div>
+        </div>
+    {% endfor %}
+<div class="container">
+            <a href="{% url 'mailing:mailing_create' %}" class="btn btn-secondary my-3"
+               style="background: darkgreen">Создать</a>
+</div>
+{% endblock %}
