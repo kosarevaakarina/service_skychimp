@@ -5,6 +5,28 @@ from config import settings
 NULLABLE = {'blank': True, 'null': True}
 
 
+class Client(models.Model):
+    """Модель клиента"""
+    name = models.CharField(max_length=150, verbose_name='Фамилия Имя Отчество')
+    email = models.EmailField(unique=True, verbose_name='Почта')
+    message = models.TextField(verbose_name='Комментарий', **NULLABLE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, **NULLABLE)
+    is_active = models.BooleanField(default=True, verbose_name='Активность')
+
+    class Meta:
+        verbose_name = 'клиент'
+        verbose_name_plural = 'клиенты'
+        ordering = ('name',)
+
+    def __str__(self):
+        return f"{self.name} ({self.email})"
+
+    def delete(self, *args, **kwargs):
+        """Функция, делающая пользователя не активным"""
+        self.is_active = False
+        self.save()
+
+
 class Message(models.Model):
     """Модель сообщения для рассылки"""
     header = models.CharField(max_length=100, verbose_name='Тема письма')
@@ -34,12 +56,16 @@ class Mailing(models.Model):
         ('START', 'запущена')
     ]
 
-    time = models.TimeField(verbose_name='Время рассылки')
+    time = models.TimeField(auto_now_add=True, verbose_name='Время рассылки')
+    create_date = models.DateField(auto_now_add=True, verbose_name='Дата создания')
     frequency = models.CharField(max_length=100, choices=FREQUENCY, verbose_name='Периодичность')
     status = models.CharField(max_length=100, choices=STATUS, verbose_name='Статус')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, **NULLABLE)
+    client = models.ManyToManyField(Client, verbose_name='Клиент', **NULLABLE)
     message = models.ForeignKey(Message, on_delete=models.SET_NULL, verbose_name='Сообщение', **NULLABLE)
-    is_active = models.BooleanField(default=True, verbose_name='активность')
+    finish_date = models.DateField(verbose_name='Дата завершения рассылки', default='2024-01-01')
+    finish_time = models.TimeField(verbose_name='Время завершения рассылки', default='00:00')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, **NULLABLE)
+    is_published = models.BooleanField(default=True, verbose_name='Опубликован')
 
     class Meta:
         verbose_name = 'рассылка'
@@ -51,7 +77,8 @@ class Mailing(models.Model):
 
     def delete(self, *args, **kwargs):
         """Функция, делающая пост не активным"""
-        self.is_active = False
+        self.is_published = False
+        self.status = 'FINISH'
         self.save()
 
 
@@ -65,9 +92,7 @@ class MailingLogs(models.Model):
     data_time = models.DateTimeField(auto_now_add=True, verbose_name='Дата и время отправки')
     status = models.CharField(max_length=100, choices=STATUS, verbose_name='Статус попытки')
     server_response = models.TextField(verbose_name='Ответ почтового сервера', **NULLABLE)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, **NULLABLE)
     mailing = models.ForeignKey(Mailing, on_delete=models.SET_NULL, verbose_name='Рассылка', **NULLABLE)
-    message = models.ForeignKey(Message, on_delete=models.SET_NULL, verbose_name='Сообщение', **NULLABLE)
 
     class Meta:
         verbose_name = 'лог отправки письма'
