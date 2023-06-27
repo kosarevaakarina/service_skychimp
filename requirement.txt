@@ -1,2 +1,7 @@
 django
-pip install psycopg2-binary
+psycopg2-binary
+celery
+redis
+django-celery-beat
+Pillow
+transliterate
