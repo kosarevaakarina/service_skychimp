@@ -10,4 +10,5 @@ mailing/management/__pycache__/
 mailing/management/commands/__pycache__/
 main/__pycache__/
 users/services/__pycache__/email_send_verify.cpython-311.pyc
+.env
 
