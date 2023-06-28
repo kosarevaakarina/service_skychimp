@@ -34,7 +34,7 @@ class MessageService:
             day_of_week = '*',
             day_of_month = self.mailing.create_date.day if self.mailing.create_date.day <= 28 else 28
 
-        schedule, _ = CrontabSchedule.objects.get_or_create(minute="*", hour=hour, day_of_week=day_of_week,
+        schedule, _ = CrontabSchedule.objects.get_or_create(minute=minute, hour=hour, day_of_week=day_of_week,
                                                             day_of_month=day_of_month, month_of_year='*')
 
         return schedule
