@@ -1,11 +1,12 @@
 Для запуска приложения необходимо настроить виртуальное окружение и установить все необходимые зависимости с помощью команд:
 
-python -m venv venv 
+python3 -m venv venv 
 source venv/bin/activate 
 pip install -r requirement.txt
 
-Для запуска celery-beat: 
+Для запуска celery: 
 celery -A config beat --loglevel=info
+celery -A config worker --loglevel=info
 
 Для запуска redis: 
 redis-cli

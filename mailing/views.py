@@ -5,7 +5,7 @@ from django.urls import reverse_lazy, reverse
 from django.views import generic
 from mailing.forms import ClientForm, MailingForm
 from mailing.models import *
-from mailing.services import MessageService, delete_task
+from mailing.services import MessageService, delete_task, send_mailing
 
 
 class MailingListView(LoginRequiredMixin, generic.ListView):
@@ -31,6 +31,15 @@ class MailingCreateView(LoginRequiredMixin, generic.CreateView):
     form_class = MailingForm
     success_url = reverse_lazy('mailing:mailing_list')
 
+    def get_queryset(self):
+        user = self.request.user
+        mailing = Mailing.objects.all()
+        if user.is_staff or user.is_superuser:
+            queryset = mailing
+        else:
+            queryset = mailing.client.filter(user=user)
+        return queryset
+
     def form_valid(self, form):
         """Если форма валидна, то при создании рассылки запускается периодическая задача и изменяется статус рассылки"""
         mailing = form.save(commit=False)
@@ -39,6 +48,7 @@ class MailingCreateView(LoginRequiredMixin, generic.CreateView):
         mailing.save()
 
         message_service = MessageService(mailing)
+        send_mailing(mailing)
         message_service.create_task()
         mailing.status = 'START'
         mailing.save()
@@ -59,7 +69,6 @@ class MailingDeleteView(LoginRequiredMixin, generic.DeleteView):
     success_url = reverse_lazy('mailing:mailing_list')
 
 
-@permission_required('mailing.change_mailing')
 def toggle_status(request, pk):
     """Функция, позволяющая отключать и активировать рассылку"""
     mailing = get_object_or_404(Mailing, pk=pk)
@@ -84,7 +93,7 @@ class ClientListView(LoginRequiredMixin, generic.ListView):
     def get_queryset(self):
         """Функция, позволяющая просматривать только своих клиентов для пользователя, который не является менеджером"""
         user = self.request.user
-        if user.is_staff:
+        if user.is_staff or user.is_superuser:
             queryset = Client.objects.all()
         else:
             queryset = Client.objects.filter(user=user)

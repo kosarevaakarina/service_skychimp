@@ -14,7 +14,7 @@ class MessageService:
     def create_task(self):
         """Создание периодической задачи"""
         crontab = self.crontab_create()
-        PeriodicTask.objects.create(crontab=crontab, name=str(self.mailing), task='mailing.tasks.send_message',
+        PeriodicTask.objects.create(crontab=crontab, name=str(self.mailing), task='send_message',
                                     args=[self.mailing.pk])
 
     def crontab_create(self):
@@ -34,7 +34,7 @@ class MessageService:
             day_of_week = '*',
             day_of_month = self.mailing.create_date.day if self.mailing.create_date.day <= 28 else 28
 
-        schedule, _ = CrontabSchedule.objects.get_or_create(minute=minute, hour=hour, day_of_week=day_of_week,
+        schedule, _ = CrontabSchedule.objects.get_or_create(minute="*", hour=hour, day_of_week=day_of_week,
                                                             day_of_month=day_of_month, month_of_year='*')
 
         return schedule
@@ -46,9 +46,9 @@ def finish_task(mailing):
     end_time = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
 
     current_time = datetime.now(pytz.timezone('Europe/Moscow'))
-    current_time = current_time.strptime("%Y-%m-%d %H:%M:%S")
+    current_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
 
-    return current_time > end_time
+    return current_time > str(end_time)
 
 
 def delete_task(mailing):
